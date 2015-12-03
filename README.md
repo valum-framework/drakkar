@@ -12,9 +12,10 @@ Command | Effect
 ------- | ------
 search  | search for packages from providers
 install | install the packages described in `package.json`
-build   | issue a build command based on `valac`
+update  | update the dependencies listed in `package.json`
 flags   | generate `valac` flags
 pack    | pack the files described in `package.json`
+version | print Drakkar's version and exit
 
 The package specification is compatible with npm's
 [package.json](https://docs.npmjs.com/files/package.json).
@@ -37,18 +38,34 @@ The package specification is compatible with npm's
 }
 ```
 
-## Install
+### Install
+
+The `install` command either download and install all packages described in
+`package.json` dependencies or perform the operation on a specified package
+from the providers
 
  1. resolve dependencies using backtracking
  2. download packages from providers (git, svn, bzr, ...)
- 3. extract relevant sources (in a compact VAPI) and copy over resources locally
- 4. produce CLI arguments (`--pkg`, `--vapidir` and `--resources` flags and more)
+ 3. extract relevant sources and copy over resources locally in the `deps`
+    folder
 
-## Packing
+Similarly, the `update` command will update dependencies up to the latest
+version that fullfill its predicate.
+
+### Flags
+
+The `flags` command generates the appropriate `valac` flags (`--pkg`,
+`--vapidir` and `--resources`) suitable for any build system.
+
+```bash
+valac $(drakkar flags) src/*.vala
+```
+
+### Packing
 
 The `pack` command is a convenient way to create a bundle containing all the
-described resources in the `package.json` file so that they can be easily
-distributed or cached in a tarball.
+described resources in the `package.json` into a compact tarball suitable for
+providers distribution.
 
 ## Files
 
@@ -62,13 +79,31 @@ be included in the package.
 
 ## Dependencies
 
+Dependencies can be provided from different sources:
+
  - local libraries (glib-2.0, libsoup-2.4, ...)
- - version predicate
- - git repository using a commit hash
- - local or remote path or bundle
+ - git repository using a commit hash, a tag or a branch
+ - GitHub repository using a `username/project` identifier
+ - local or remote path (see [GVfs](https://wiki.gnome.org/Projects/gvfs)-supported protocols)
+ - local or remote bundle, which are simple tarballs
+
+```json
+{
+  "dependencies":
+  {
+    "valum-framework/drakkar": "~1.0.0",
+    "nemequ/vala-extra-vapis": "@master",
+    "/usr/share/vala/vapis": "*"
+  }
+}
+```
 
 Versions are extracted from tags following various conventions:
 
  - `v1.0.0`
  - `1.0.0`
+
+Dependencies that does not provide a `package.json` will be considered as
+a whole: all the sources will be downladed and no particular flags will be
+generated.
 
